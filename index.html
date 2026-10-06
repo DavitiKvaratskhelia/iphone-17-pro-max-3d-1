@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="ka">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121316">
+<title>iPhone 17 Pro Max — 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fg: #ecedf0;
+    --muted: rgba(236, 237, 240, 0.55);
+    --panel: rgba(30, 32, 37, 0.58);
+    --line: rgba(255, 255, 255, 0.09);
+    --hover: rgba(255, 255, 255, 0.07);
+    --active: rgba(255, 255, 255, 0.14);
+    --accent: #8fb0ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    color: var(--fg);
+    background:
+      radial-gradient(60% 45% at 50% 42%, rgba(120, 130, 155, 0.16) 0%, rgba(0, 0, 0, 0) 70%),
+      radial-gradient(130% 95% at 50% 40%, #2a2c31 0%, #18191c 50%, #0b0c0e 100%);
+    background-color: #121316;
+    font-family: "Noto Sans Georgian", "Segoe UI", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  #c {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+    touch-action: none;
+    cursor: grab;
+    outline: none;
+  }
+  #c.dragging { cursor: grabbing; }
+
+  header {
+    position: fixed;
+    top: max(18px, env(safe-area-inset-top));
+    left: max(22px, env(safe-area-inset-left));
+    pointer-events: none;
+  }
+  header h1 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.01em; }
+  header p { margin: 3px 0 0; font-size: 12px; color: var(--muted); }
+
+  .swatches {
+    position: fixed;
+    top: max(18px, env(safe-area-inset-top));
+    right: max(22px, env(safe-area-inset-right));
+    display: flex; gap: 10px; padding: 7px 9px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+  }
+  .swatches button {
+    width: 20px; height: 20px; padding: 0;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: var(--sw);
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .swatches button:hover { transform: scale(1.1); }
+  .swatches button[aria-pressed="true"] { box-shadow: 0 0 0 2px #121316, 0 0 0 3.5px rgba(255, 255, 255, 0.85); }
+
+  .dock {
+    position: fixed;
+    left: 50%;
+    bottom: calc(18px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    display: flex; align-items: center; gap: 4px;
+    padding: 5px;
+    max-width: calc(100vw - 32px);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  }
+  .dock button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--fg);
+    font: inherit;
+    font-size: 13px;
+    line-height: 1;
+    padding: 10px 14px;
+    border-radius: 11px;
+    cursor: pointer;
+    white-space: nowrap;
+    touch-action: manipulation;
+    transition: background 0.2s, color 0.2s;
+  }
+  .dock button:hover { background: var(--hover); }
+  .dock button.active { background: var(--active); }
+  .dock .sep { width: 1px; align-self: stretch; margin: 6px 4px; background: var(--line); }
+  .dock .toggle { display: inline-flex; align-items: center; gap: 9px; }
+  .dock .toggle .sw {
+    position: relative; width: 28px; height: 16px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    transition: background 0.25s;
+    flex: none;
+  }
+  .dock .toggle .sw::after {
+    content: ""; position: absolute; top: 2px; left: 2px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #fff;
+    transition: transform 0.25s;
+  }
+  .dock .toggle[aria-pressed="true"] .sw { background: #4f7cff; }
+  .dock .toggle[aria-pressed="true"] .sw::after { transform: translateX(12px); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .hint {
+    position: fixed; left: 50%;
+    bottom: calc(80px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    font-size: 12px; color: var(--muted);
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity 0.8s;
+  }
+  .hint.gone { opacity: 0; }
+
+  #loader, #error {
+    position: fixed; inset: 0; z-index: 10;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; padding: 24px; text-align: center;
+    background: radial-gradient(130% 95% at 50% 40%, #2a2c31 0%, #18191c 50%, #0b0c0e 100%);
+    transition: opacity 0.7s;
+  }
+  #loader.done { opacity: 0; pointer-events: none; }
+  .spinner {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 2.5px solid rgba(255, 255, 255, 0.14);
+    border-top-color: rgba(255, 255, 255, 0.85);
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loader-text { font-size: 13px; color: var(--muted); }
+  #error[hidden] { display: none; }
+  #error h2 { margin: 0; font-size: 18px; font-weight: 600; }
+  #error p { margin: 0; max-width: 460px; font-size: 14px; line-height: 1.6; color: var(--muted); }
+
+  @media (max-width: 640px) {
+    .dock {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: calc(100vw - 32px);
+    }
+    .dock .sep { display: none; }
+    .dock .toggle { grid-column: 1 / -1; justify-content: center; }
+    .dock button { padding: 11px 8px; }
+    .hint { bottom: calc(150px + env(safe-area-inset-bottom)); font-size: 11px; }
+    header h1 { font-size: 14px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .spinner { animation-duration: 2.5s; }
+  }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="c" tabindex="0" aria-label="iPhone 17 Pro Max-ის ინტერაქტიული 3D მოდელი"></canvas>
+
+<header>
+  <h1>iPhone 17 Pro Max</h1>
+  <p id="color-name">Deep Blue</p>
+</header>
+
+<div class="swatches" role="group" aria-label="ფერი">
+  <button data-color="deepBlue" style="--sw:#3b4763" aria-pressed="true" title="Deep Blue" aria-label="Deep Blue"></button>
+  <button data-color="cosmicOrange" style="--sw:#d4703a" aria-pressed="false" title="Cosmic Orange" aria-label="Cosmic Orange"></button>
+  <button data-color="silver" style="--sw:#d9dadc" aria-pressed="false" title="Silver" aria-label="Silver"></button>
+</div>
+
+<div class="hint" id="hint">გადაათრიეთ დასატრიალებლად · მასშტაბი: ბორბალი ან ორი თითი</div>
+
+<nav class="dock" aria-label="ხედები">
+  <button data-view="front">წინა ხედი</button>
+  <button data-view="back">უკანა ხედი</button>
+  <button data-view="side">გვერდითი ხედი</button>
+  <button data-view="home" class="active">საწყისი ხედი</button>
+  <span class="sep" aria-hidden="true"></span>
+  <button class="toggle" id="auto" aria-pressed="true"><span class="sw" aria-hidden="true"></span>ავტობრუნვა</button>
+</nav>
+
+<div id="loader" role="status" aria-live="polite">
+  <div class="spinner" aria-hidden="true"></div>
+  <div id="loader-text">იტვირთება…</div>
+</div>
+
+<div id="error" hidden role="alert">
+  <h2 id="error-title"></h2>
+  <p id="error-msg"></p>
+</div>
+
+<script>
+  // Shared error display + WebGL 2 capability check (runs before the 3D module).
+  window.__showError = function (title, msg) {
+    var loader = document.getElementById('loader');
+    if (loader) loader.style.display = 'none';
+    document.getElementById('error-title').textContent = title;
+    document.getElementById('error-msg').textContent = msg;
+    document.getElementById('error').hidden = false;
+  };
+  (function () {
+    var ok = false;
+    try {
+      var c = document.createElement('canvas');
+      var gl = window.WebGL2RenderingContext && c.getContext('webgl2');
+      ok = !!gl;
+      if (gl) { var ext = gl.getExtension('WEBGL_lose_context'); if (ext) ext.loseContext(); }
+    } catch (e) { ok = false; }
+    window.__WEBGL_OK__ = ok;
+    if (!ok) {
+      window.__showError(
+        'WebGL ხელმისაწვდომი არ არის',
+        'თქვენი ბრაუზერი ან მოწყობილობა 3D გრაფიკას (WebGL 2) არ უჭერს მხარს, ან ის გამორთულია. გამოიყენეთ Chrome, Edge, Firefox ან Safari-ს განახლებული ვერსია და ჩართეთ აპარატურული აჩქარება (hardware acceleration).'
+      );
+    }
+    // If the library never arrives (offline / blocked CDN), tell the user instead of spinning forever.
+    window.__loadTimer = setTimeout(function () {
+      if (!window.__LIB_LOADED__ && window.__WEBGL_OK__) {
+        window.__showError('ჩატვირთვა ვერ დასრულდა', 'Three.js ბიბლიოთეკა CDN-დან იტვირთება. შეამოწმეთ ინტერნეტ-კავშირი და განაახლეთ გვერდი.');
+      }
+    }, 25000);
+  })();
+</script>
+<script nomodule>
+  window.__showError('ბრაუზერი მოძველებულია', 'ამ გვერდისთვის საჭიროა თანამედროვე ბრაუზერი ES-მოდულების მხარდაჭერით.');
+</script>
+
+<script type="module">
+const loaderEl = document.getElementById('loader');
+const loaderText = document.getElementById('loader-text');
+// Let the loader repaint between build steps (setTimeout fallback keeps going in background tabs).
+const step = (t) => { loaderText.textContent = t; return new Promise(r => { requestAnimationFrame(() => r()); setTimeout(r, 60); }); };
+
+if (window.__WEBGL_OK__) {
+  main().catch((err) => {
+    console.error(err);
+    window.__showError('დაფიქსირდა შეცდომა', 'სცენის აგება ვერ მოხერხდა: ' + (err && err.message ? err.message : err));
+  });
+}
+
+async function main() {
+  await step('ბიბლიოთეკის ჩატვირთვა…');
+  let THREE, BGU;
+  try {
+    THREE = await import('three');
+    BGU = await import('three/addons/utils/BufferGeometryUtils.js');
+  } catch (e) {
+    console.error(e);
+    window.__showError('Three.js ვერ ჩაიტვირთა', 'ბიბლიოთეკა CDN-დან (cdn.jsdelivr.net) იტვირთება — შეამოწმეთ ინტერნეტ-კავშირი და განაახლეთ გვერდი.');
+    return;
+  }
+  window.__LIB_LOADED__ = true;
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ───────────────────────── Renderer / scene / camera ─────────────────────────
+  const canvas = document.getElementById('c');
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+  } catch (e) {
+    window.__showError('WebGL ხელმისაწვდომი არ არის', 'WebGL კონტექსტის შექმნა ვერ მოხერხდა. ჩართეთ აპარატურული აჩქარება ან სცადეთ სხვა ბრაუზერი.');
+    return;
+  }
+  canvas.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault();
+    window.__showError('WebGL კონტექსტი დაიკარგა', 'გრაფიკული დრაივერი გადაიტვირთა. განაახლეთ გვერდი.');
+  });
+
+  const maxPR = Math.min(window.devicePixelRatio || 1, 2);
+  let pixelRatio = maxPR;
+  renderer.setPixelRatio(pixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
+  renderer.setClearColor(0x000000, 0);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.NeutralToneMapping;
+  renderer.toneMappingExposure = 1.1;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(28, window.innerWidth / window.innerHeight, 10, 5000);
+  const LOOK_AT = new THREE.Vector3(0, -8, 0);
+
+  // ───────────────────────── Dimensions (millimetres) ─────────────────────────
+  // Apple spec for iPhone 17 Pro Max: 163.4 × 78.0 × 8.75 mm. Details below are measured from the reference photos.
+  const W = 78.0, H = 163.4, D = 8.75;
+  const R = 12.4;             // outer corner radius (approx.)
+  const BS = 1.8, BT = 2.1;   // edge rounding of the unibody (size / thickness)
+  const GI = 1.15;            // aluminium lip around the front glass
+  const BEZ = 1.3;            // black border between glass edge and active display
+  const FRONT_Z = D / 2 + 0.15;
+  const dW = W - 2 * GI - 2 * BEZ, dH = H - 2 * GI - 2 * BEZ, dR = R - GI - BEZ;
+
+  // ───────────────────────── Geometry helpers ─────────────────────────
+  function rrect4(w, h, tl, tr, br, bl) {
+    const m = Math.min(w, h) / 2 - 1e-3;
+    tl = Math.min(tl, m); tr = Math.min(tr, m); br = Math.min(br, m); bl = Math.min(bl, m);
+    const x0 = -w / 2, x1 = w / 2, y0 = -h / 2, y1 = h / 2;
+    const s = new THREE.Shape();
+    s.moveTo(x0 + bl, y0);
+    s.lineTo(x1 - br, y0);
+    s.absarc(x1 - br, y0 + br, br, -Math.PI / 2, 0, false);
+    s.lineTo(x1, y1 - tr);
+    s.absarc(x1 - tr, y1 - tr, tr, 0, Math.PI / 2, false);
+    s.lineTo(x0 + tl, y1);
+    s.absarc(x0 + tl, y1 - tl, tl, Math.PI / 2, Math.PI, false);
+    s.lineTo(x0, y0 + bl);
+    s.absarc(x0 + bl, y0 + bl, bl, Math.PI, Math.PI * 1.5, false);
+    return s;
+  }
+  const rrect = (w, h, r) => rrect4(w, h, r, r, r, r);
+
+  // Rounded slab with soft (quarter-round) edges. Spans z ∈ [0, thick]; outer footprint is exactly w × h.
+  function slab(w, h, radii, thick, bs, bt, curveSegments = 12, bevelSegments = 6) {
+    const r = Array.isArray(radii) ? radii : [radii, radii, radii, radii];
+    const shape = rrect4(w - 2 * bs, h - 2 * bs, ...r.map(v => Math.max(v - bs, 0.02)));
+    const g = new THREE.ExtrudeGeometry(shape, {
+      depth: Math.max(thick - 2 * bt, 0.001),
+      bevelEnabled: true, bevelThickness: bt, bevelSize: bs,
+      bevelSegments, curveSegments
+    });
+    g.translate(0, 0, bt);
+    g.deleteAttribute('uv');
+    return BGU.toCreasedNormals(g, Math.PI / 3);
+  }
+
+  function lathe(points, segments = 96) {
+    const g = new THREE.LatheGeometry(points.map(p => new THREE.Vector2(p[0], p[1])), segments);
+    g.rotateX(Math.PI / 2); // lathe axis Y → local Z
+    return g;
+  }
+
+  // Spherical cap with base radius `a` and height `h`; base at z = 0, apex at z = h.
+  function cap(a, h, seg = 64) {
+    const s = (a * a + h * h) / (2 * h);
+    const g = new THREE.SphereGeometry(s, seg, 14, 0, Math.PI * 2, 0, Math.asin(a / s));
+    g.translate(0, h - s, 0);
+    g.rotateX(Math.PI / 2);
+    return g;
+  }
+
+  function flatShape(shape, segs = 24) { return new THREE.ShapeGeometry(shape, segs); }
+
+  function appleLogoShapes() {
+    const b = new THREE.Shape();
+    b.moveTo(0, -40);
+    b.bezierCurveTo(6, -41, 10, -46, 18, -46);
+    b.bezierCurveTo(26, -46, 32, -38, 38, -28);
+    b.bezierCurveTo(41, -23, 44, -15, 46, -8);
+    b.bezierCurveTo(35, -3, 30, 6, 30, 14);
+    b.bezierCurveTo(30, 23, 35, 29, 42, 32);
+    b.bezierCurveTo(38, 40, 28, 45, 20, 45);
+    b.bezierCurveTo(12, 45, 6, 41, 0, 41);
+    b.bezierCurveTo(-6, 41, -12, 45, -20, 45);
+    b.bezierCurveTo(-34, 45, -46, 33, -46, 14);
+    b.bezierCurveTo(-46, -6, -40, -26, -32, -38);
+    b.bezierCurveTo(-27, -44, -23, -46, -18, -46);
+    b.bezierCurveTo(-10, -46, -6, -41, 0, -40);
+    const leaf = new THREE.Shape();
+    leaf.moveTo(1, 48);
+    leaf.bezierCurveTo(1, 59, 9, 68, 21, 70);
+    leaf.bezierCurveTo(22, 58, 13, 48, 1, 48);
+    return [b, leaf];
+  }
+
+  // ───────────────────────── Procedural textures ─────────────────────────
+  await step('ეკრანის მომზადება…');
+  try {
+    await Promise.race([
+      Promise.all([document.fonts.load('500 40px "Noto Sans Georgian"'), document.fonts.ready]),
+      new Promise(r => setTimeout(r, 1500))
+    ]);
+  } catch (e) { /* fonts are optional */ }
+
+  function makeScreenTexture() {
+    const cw = 1100, ch = Math.round(cw * dH / dW);
+    const c = document.createElement('canvas');
+    c.width = cw; c.height = ch;
+    const x = c.getContext('2d');
+    const mm = cw / dW;
+
+    let g = x.createLinearGradient(0, 0, 0, ch);
+    g.addColorStop(0, '#03040b');
+    g.addColorStop(0.4, '#0a1236');
+    g.addColorStop(0.72, '#1b0f2f');
+    g.addColorStop(1, '#070509');
+    x.fillStyle = g; x.fillRect(0, 0, cw, ch);
+
+    const blob = (px, py, r, rgb, a) => {
+      const rg = x.createRadialGradient(px, py, 0, px, py, r);
+      rg.addColorStop(0, `rgba(${rgb},${a})`);
+      rg.addColorStop(0.55, `rgba(${rgb},${a * 0.35})`);
+      rg.addColorStop(1, `rgba(${rgb},0)`);
+      x.fillStyle = rg; x.fillRect(0, 0, cw, ch);
+    };
+    x.globalCompositeOperation = 'lighter';
+    blob(cw * 0.88, ch * 0.16, cw * 0.95, '46,92,255', 0.5);
+    blob(cw * 0.08, ch * 0.44, cw * 0.8, '128,64,255', 0.3);
+    blob(cw * 0.32, ch * 0.88, cw * 1.0, '255,112,34', 0.6);
+    blob(cw * 0.95, ch * 0.7, cw * 0.6, '255,70,130', 0.2);
+
+    // Silk ribbons — many faint strokes build a soft, flowing band of light.
+    const ribbon = (yBase, amp, freq, phase, rgbA, rgbB, count, spread) => {
+      x.lineWidth = 1.5;
+      for (let k = 0; k < count; k++) {
+        const p = k / (count - 1);
+        const a = 0.034 * Math.pow(1 - Math.abs(p - 0.5) * 2, 0.6) + 0.01;
+        const col = rgbA.map((v, i) => Math.round(v + (rgbB[i] - v) * p)).join(',');
+        x.strokeStyle = `rgba(${col},${a})`;
+        x.beginPath();
+        for (let i = 0; i <= 80; i++) {
+          const u = i / 80;
+          const px = -60 + u * (cw + 120);
+          const py = ch * yBase
+            + Math.sin(u * Math.PI * freq + phase + p * 1.9) * ch * amp
+            + Math.sin(u * 7.1 + p * 3.1) * ch * 0.012
+            + (p - 0.5) * ch * spread;
+          i === 0 ? x.moveTo(px, py) : x.lineTo(px, py);
+        }
+        x.stroke();
+      }
+    };
+    ribbon(0.66, 0.07, 1.25, 0.4, [255, 140, 60], [255, 210, 170], 130, 0.13);
+    ribbon(0.36, 0.05, 1.6, 2.2, [90, 120, 255], [190, 150, 255], 90, 0.09);
+    x.globalCompositeOperation = 'source-over';
+
+    // Edge vignette for depth.
+    g = x.createRadialGradient(cw / 2, ch * 0.5, cw * 0.3, cw / 2, ch * 0.5, ch * 0.62);
+    g.addColorStop(0, 'rgba(0,0,0,0)');
+    g.addColorStop(1, 'rgba(0,0,0,0.45)');
+    x.fillStyle = g; x.fillRect(0, 0, cw, ch);
+
+    // Lock-screen typography.
+    x.fillStyle = 'rgba(255,255,255,0.94)';
+    x.textAlign = 'center';
+    x.textBaseline = 'alphabetic';
+    // Georgian date built by hand — not every browser ships Intl data for 'ka'.
+    const now = new Date();
+    const WD = ['კვირა', 'ორშაბათი', 'სამშაბათი', 'ოთხშაბათი', 'ხუთშაბათი', 'პარასკევი', 'შაბათი'];
+    const MO = ['იანვარი', 'თებერვალი', 'მარტი', 'აპრილი', 'მაისი', 'ივნისი', 'ივლისი', 'აგვისტო', 'სექტემბერი', 'ოქტომბერი', 'ნოემბერი', 'დეკემბერი'];
+    const dateStr = `${WD[now.getDay()]}, ${now.getDate()} ${MO[now.getMonth()]}`;
+    x.font = `500 ${Math.round(cw * 0.046)}px "Noto Sans Georgian", "Segoe UI", system-ui, sans-serif`;
+    x.fillStyle = 'rgba(255,255,255,0.82)';
+    x.fillText(dateStr, cw / 2, ch * 0.105);
+    x.fillStyle = 'rgba(255,255,255,0.95)';
+    x.font = `600 ${Math.round(cw * 0.25)}px "SF Pro Display", "Helvetica Neue", "Segoe UI", system-ui, sans-serif`;
+    x.fillText('9:41', cw / 2, ch * 0.225);
+
+    // Status icons (right of the Dynamic Island).
+    const sy = (1.9 + 3.05) * mm;
+    x.fillStyle = 'rgba(255,255,255,0.95)';
+    const sx = cw * 0.73;
+    for (let i = 0; i < 4; i++) {
+      const bh = 10 + i * 6;
+      x.beginPath(); x.roundRect(sx + i * 13, sy + 14 - bh, 9, bh, 2.5); x.fill();
+    }
+    x.strokeStyle = 'rgba(255,255,255,0.95)';
+    x.lineCap = 'round';
+    const wx = sx + 82, wy = sy + 12;
+    for (let i = 0; i < 3; i++) {
+      x.lineWidth = 4.5;
+      x.beginPath(); x.arc(wx, wy, 8 + i * 8, -Math.PI * 0.75, -Math.PI * 0.25); x.stroke();
+    }
+    const bx = sx + 112, by = sy - 10;
+    x.lineWidth = 2.4;
+    x.strokeStyle = 'rgba(255,255,255,0.55)';
+    x.beginPath(); x.roundRect(bx, by, 52, 25, 7); x.stroke();
+    x.fillStyle = 'rgba(255,255,255,0.95)';
+    x.beginPath(); x.roundRect(bx + 4, by + 4, 40, 17, 4); x.fill();
+    x.beginPath(); x.roundRect(bx + 55, by + 8, 4, 9, 2); x.fill();
+
+    // Home indicator.
+    x.fillStyle = 'rgba(255,255,255,0.9)';
+    x.beginPath(); x.roundRect(cw * 0.32, ch - 2.2 * mm, cw * 0.36, 0.55 * mm, 0.3 * mm); x.fill();
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return tex;
+  }
+
+  function makeFlashTexture() {
+    const s = 256, c = document.createElement('canvas');
+    c.width = c.height = s;
+    const x = c.getContext('2d');
+    const g = x.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+    g.addColorStop(0, '#fbf6ea'); g.addColorStop(0.6, '#ebe6dc'); g.addColorStop(1, '#cfcac0');
+    x.fillStyle = g; x.fillRect(0, 0, s, s);
+    for (let r = 10; r < s / 2; r += 7) {
+      x.strokeStyle = `rgba(90,80,60,${0.05 + 0.06 * (r / (s / 2))})`;
+      x.lineWidth = 1.4;
+      x.beginPath(); x.arc(s / 2, s / 2, r, 0, Math.PI * 2); x.stroke();
+    }
+    x.fillStyle = 'rgba(255,215,140,0.45)';
+    x.beginPath(); x.arc(s / 2 - 16, s / 2, 12, 0, Math.PI * 2); x.fill();
+    x.beginPath(); x.arc(s / 2 + 16, s / 2, 12, 0, Math.PI * 2); x.fill();
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }
+
+  function makeBlobTexture() {
+    const s = 256, c = document.createElement('canvas');
+    c.width = c.height = s;
+    const x = c.getContext('2d');
+    const g = x.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+    g.addColorStop(0, 'rgba(0,0,0,1)');
+    g.addColorStop(0.3, 'rgba(0,0,0,0.7)');
+    g.addColorStop(0.65, 'rgba(0,0,0,0.22)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; x.fillRect(0, 0, s, s);
+    return new THREE.CanvasTexture(c);
+  }
+
+  // ───────────────────────── Studio lighting environment ─────────────────────────
+  await step('სტუდიური განათება…');
+  function buildStudioEnvironment() {
+    const env = new THREE.Scene();
+    const sg = new THREE.SphereGeometry(50, 64, 32);
+    const top = new THREE.Color(0x4a4e57), mid = new THREE.Color(0x24262b), bot = new THREE.Color(0x0b0b0c);
+    const cols = [], pos = sg.attributes.position, tmp = new THREE.Color();
+    for (let i = 0; i < pos.count; i++) {
+      const t = pos.getY(i) / 50;
+      tmp.copy(mid).lerp(t > 0 ? top : bot, Math.abs(t));
+      cols.push(tmp.r, tmp.g, tmp.b);
+    }
+    sg.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+    env.add(new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
+
+    const panel = (w, h, k, p, tint = 0xffffff) => {
+      const m = new THREE.Mesh(
+        new THREE.PlaneGeometry(w, h),
+        new THREE.MeshBasicMaterial({ color: new THREE.Color(tint).multiplyScalar(k), side: THREE.DoubleSide })
+      );
+      m.position.set(...p);
+      m.lookAt(0, 0, 0);
+      env.add(m);
+    };
+    panel(6, 5, 3.2, [-5, 5, 5], 0xfff6ec);   // key softbox, upper-left front
+    panel(9, 4, 1.4, [0, 8, 0]);              // overhead
+    panel(1.2, 10, 5.0, [-8, 0, 1]);          // left strip → long edge highlight
+    panel(1.2, 10, 4.0, [8, 0.5, -1.5], 0xeef3ff); // right strip
+    panel(7, 2.2, 2.4, [0, 1.5, -8], 0xdfe8ff);    // rear rim
+    panel(9, 2, 0.7, [0, -2.5, 8]);           // low front fill
+    panel(8, 5, 2.2, [3, 8, 6.5]);        // large frontal softbox (lights faces turned to camera)
+    panel(14, 14, 0.08, [0, -8, 0]);          // floor bounce
+
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const rt = pmrem.fromScene(env, 0.015);
+    pmrem.dispose();
+    env.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
+    return rt.texture;
+  }
+  scene.environment = buildStudioEnvironment();
+  scene.environmentIntensity = 1.25;
+
+  const key = new THREE.DirectionalLight(0xfff4ea, 3.4);
+  key.position.set(-260, 380, 340);
+  const rim = new THREE.DirectionalLight(0xdfe7ff, 2.4);
+  rim.position.set(320, 160, -380);
+  const fill = new THREE.HemisphereLight(0xc4c9d4, 0x111113, 0.9);
+  scene.add(key, rim, fill);
+
+  // ───────────────────────── Materials ─────────────────────────
+  await step('მოდელის აგება…');
+  const PALETTES = {
+    deepBlue:     { name: 'Deep Blue',     alu: '#666e85', glass: '#525a72', logo: '#5d667f' },
+    cosmicOrange: { name: 'Cosmic Orange', alu: '#d2692c', glass: '#d8783e', logo: '#c46a34' },
+    silver:       { name: 'Silver',        alu: '#d3d5d8', glass: '#e4e4e2', logo: '#c9cbce' }
+  };
+
+  const mats = {
+    frame: new THREE.MeshPhysicalMaterial({ metalness: 0.65, roughness: 0.36 }),
+    plateau: new THREE.MeshPhysicalMaterial({ metalness: 0.42, roughness: 0.48 }),
+    ring: new THREE.MeshPhysicalMaterial({ metalness: 0.85, roughness: 0.18 }),
+    button: new THREE.MeshPhysicalMaterial({ metalness: 0.68, roughness: 0.3 }),
+    backGlass: new THREE.MeshPhysicalMaterial({ metalness: 0.0, roughness: 0.55, clearcoat: 0.45, clearcoatRoughness: 0.3 }),
+    logo: new THREE.MeshPhysicalMaterial({ metalness: 0.85, roughness: 0.2 }),
+    frontGlass: new THREE.MeshPhysicalMaterial({ color: 0x040405, metalness: 0, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.02 }),
+    display: new THREE.MeshPhysicalMaterial({ color: 0x000000, metalness: 0, roughness: 0.3, clearcoat: 0.45, clearcoatRoughness: 0.02, emissive: 0xffffff, emissiveIntensity: 1.0 }),
+    island: new THREE.MeshPhysicalMaterial({ color: 0x000000, roughness: 0.25, clearcoat: 1, clearcoatRoughness: 0.02 }),
+    slit: new THREE.MeshStandardMaterial({ color: 0x16171a, roughness: 0.8 }),
+    // (Materials are grouped by feature set — physical / +clearcoat / +iridescence / standard —
+    //  so the whole phone compiles to a handful of shader programs.)
+    sapphire: new THREE.MeshPhysicalMaterial({ color: 0x1c2130, metalness: 0.25, roughness: 0.08, clearcoat: 1, clearcoatRoughness: 0.02 }),
+    barrel: new THREE.MeshStandardMaterial({ color: 0x060607, roughness: 0.5 }),
+    accent: new THREE.MeshStandardMaterial({ color: 0x3a3d45, metalness: 1, roughness: 0.28 }),
+    lensOuter: new THREE.MeshPhysicalMaterial({
+      color: 0x030308, metalness: 0, roughness: 0.05, clearcoat: 1, clearcoatRoughness: 0.03,
+      iridescence: 1, iridescenceIOR: 1.8, iridescenceThicknessRange: [280, 720], envMapIntensity: 1.6
+    }),
+    lensInner: new THREE.MeshPhysicalMaterial({
+      color: 0x0c1645, metalness: 0.35, roughness: 0.05, clearcoat: 1, clearcoatRoughness: 0.02,
+      iridescence: 0.85, iridescenceIOR: 1.6, iridescenceThicknessRange: [200, 520], envMapIntensity: 1.8
+    }),
+    cover: new THREE.MeshPhysicalMaterial({
+      color: 0xffffff, metalness: 0, roughness: 0, transmission: 1, thickness: 0.4, ior: 1.77,
+      specularIntensity: 1, iridescence: 0.35, iridescenceIOR: 1.35, iridescenceThicknessRange: [180, 420], envMapIntensity: 1.3
+    }),
+    lidar: new THREE.MeshPhysicalMaterial({
+      color: 0x040406, roughness: 0.08, clearcoat: 1, clearcoatRoughness: 0.03,
+      iridescence: 0.7, iridescenceIOR: 1.5, iridescenceThicknessRange: [300, 600]
+    }),
+    // Same feature set as the display material (clearcoat + emissiveMap) so both share one shader program.
+    flash: new THREE.MeshPhysicalMaterial({ color: 0xd9d5cc, roughness: 0.35, clearcoat: 1, clearcoatRoughness: 0.08, emissive: 0xffffff, emissiveMap: makeFlashTexture(), emissiveIntensity: 0.22 }),
+    hole: new THREE.MeshStandardMaterial({ color: 0x030303, roughness: 1 }),
+    tongue: new THREE.MeshStandardMaterial({ color: 0x26272b, roughness: 0.45, metalness: 0.2 }),
+    screw: new THREE.MeshStandardMaterial({ color: 0x8d9096, roughness: 0.3, metalness: 1 }),
+    seam: new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.38, depthWrite: false })
+  };
+  mats.display.emissiveMap = makeScreenTexture();
+
+  // Antenna lines: thin matte bands painted on the unibody sides in the shader (object-space y).
+  mats.frame.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vObjPos;\nvarying vec3 vObjN;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvObjPos = position;\nvObjN = normal;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>
+varying vec3 vObjPos;
+varying vec3 vObjN;
+float bandAt(float y, float c, float w) {
+  float fw = fwidth(y) + 1e-4;
+  return 1.0 - smoothstep(w - fw, w + fw, abs(y - c));
+}
+float antennaMask() {
+  float side = 1.0 - smoothstep(0.55, 0.85, abs(normalize(vObjN).z));
+  float y = vObjPos.y;
+  float m = max(bandAt(y, ${(H / 2 - 14).toFixed(2)}, 0.42), bandAt(y, ${(-(H / 2 - 14)).toFixed(2)}, 0.42));
+  return m * side;
+}`)
+      .replace('#include <color_fragment>', '#include <color_fragment>\nfloat aMask = antennaMask();\ndiffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * 0.55, aMask);')
+      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.75, aMask);')
+      .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.1, aMask);');
+  };
+
+  function applyPalette(id) {
+    const p = PALETTES[id];
+    for (const k of ['frame', 'plateau', 'ring', 'button']) mats[k].color.set(p.alu);
+    mats.backGlass.color.set(p.glass);
+    mats.logo.color.set(p.logo);
+    document.getElementById('color-name').textContent = p.name;
+  }
+  applyPalette('deepBlue');
+
+  // ───────────────────────── Phone model ─────────────────────────
+  const pivot = new THREE.Group();   // floating bob
+  const phone = new THREE.Group();   // user rotation
+  pivot.add(phone);
+  scene.add(pivot);
+
+  // Aluminium unibody
+  const bodyGeo = slab(W, H, R, D, BS, BT, 16, 10);
+  bodyGeo.translate(0, 0, -D / 2);
+  phone.add(new THREE.Mesh(bodyGeo, mats.frame));
+
+  // ── Front: Ceramic Shield glass, display, Dynamic Island, earpiece
+  const fgGeo = slab(W - 2 * GI, H - 2 * GI, R - GI, 0.9, 0.4, 0.4, 16, 5);
+  fgGeo.translate(0, 0, D / 2 - 0.75);
+  phone.add(new THREE.Mesh(fgGeo, mats.frontGlass));
+
+  const dispGeo = flatShape(rrect(dW, dH, dR), 24);
+  {
+    const p = dispGeo.attributes.position, uv = dispGeo.attributes.uv;
+    for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / dW + 0.5, p.getY(i) / dH + 0.5);
+    uv.needsUpdate = true;
+  }
+  const display = new THREE.Mesh(dispGeo, mats.display);
+  display.position.z = FRONT_Z + 0.02;
+  phone.add(display);
+
+  const island = new THREE.Mesh(flatShape(rrect(20.4, 6.1, 3.04), 16), mats.island);
+  island.position.set(0, dH / 2 - 1.9 - 3.05, FRONT_Z + 0.045);
+  phone.add(island);
+
+  const slit = new THREE.Mesh(flatShape(rrect(11, 0.5, 0.24), 8), mats.slit);
+  slit.position.set(0, H / 2 - GI - 0.8, FRONT_Z + 0.03);
+  phone.add(slit);
+
+  // ── Back (local +z points out of the back, local +x is "right" when looking at the back)
+  const back = new THREE.Group();
+  back.rotation.y = Math.PI;
+  back.position.z = -D / 2;
+  phone.add(back);
+
+  // Full-width camera plateau
+  const PL_IN = 1.2, PL_LEN = 43.7, PL_RISE = 1.7;
+  const plTop = H / 2 - PL_IN, plBot = H / 2 - PL_LEN;
+  const plGeo = slab(W - 2 * PL_IN, plTop - plBot, [R - PL_IN, R - PL_IN, 6.5, 6.5], PL_RISE + 0.5, 0.55, 0.55, 16, 6);
+  plGeo.translate(0, (plTop + plBot) / 2, -0.5);
+  back.add(new THREE.Mesh(plGeo, mats.plateau));
+
+  // Ceramic Shield back-glass panel (MagSafe region)
+  const GP = 3.4;
+  const gpTop = plBot - 4.2, gpBot = -H / 2 + GP, gpCy = (gpTop + gpBot) / 2;
+  const gpGeo = slab(W - 2 * GP, gpTop - gpBot, [6, 6, R - GP, R - GP], 0.42, 0.14, 0.14, 16, 4);
+  gpGeo.translate(0, gpCy, -0.3);
+  back.add(new THREE.Mesh(gpGeo, mats.backGlass));
+
+  // Apple logo
+  {
+    const g = flatShape(appleLogoShapes(), 24);
+    g.computeBoundingBox();
+    const bb = g.boundingBox;
+    g.translate(-(bb.min.x + bb.max.x) / 2, -(bb.min.y + bb.max.y) / 2, 0);
+    const s = 15.5 / (bb.max.y - bb.min.y);
+    g.scale(s, s, 1);
+    const logo = new THREE.Mesh(g, mats.logo);
+    logo.position.set(0, gpCy + 0.3, 0.12 + 0.015);
+    back.add(logo);
+  }
+
+  // Camera lenses
+  function makeLens(Rr) {
+    const g = new THREE.Group();
+    const rin = Rr - 1.6;
+    g.add(new THREE.Mesh(lathe([
+      [Rr, -0.4], [Rr, 0.95], [Rr - 0.04, 1.25], [Rr - 0.16, 1.5], [Rr - 0.38, 1.68], [Rr - 0.7, 1.78],
+      [Rr - 1.05, 1.78], [Rr - 1.32, 1.7], [Rr - 1.5, 1.55], [rin, 1.3], [rin, 1.0]
+    ]), mats.ring));
+    const seam = new THREE.Mesh(new THREE.RingGeometry(Rr - 0.02, Rr + 0.32, 96), mats.seam);
+    seam.position.z = 0.012;
+    g.add(seam);
+    g.add(new THREE.Mesh(lathe([[rin, 1.0], [5.3, 1.0], [5.3, 0.78], [4.2, 0.78], [4.2, 0.5], [0.001, 0.5]]), mats.barrel));
+    const acc = new THREE.Mesh(new THREE.RingGeometry(4.25, 4.6, 96), mats.accent);
+    acc.position.z = 0.785;
+    g.add(acc);
+    const outer = new THREE.Mesh(cap(4.2, 0.55), mats.lensOuter);
+    outer.position.z = 0.5;
+    g.add(outer);
+    const inner = new THREE.Mesh(cap(2.0, 0.22), mats.lensInner);
+    inner.position.z = 0.93;
+    g.add(inner);
+    const cover = new THREE.Mesh(new THREE.CircleGeometry(rin + 0.02, 96), mats.cover);
+    cover.position.z = 1.32;
+    g.add(cover);
+    return g;
+  }
+  function makeSmallWindow(Rr, coverMat) {
+    const g = new THREE.Group();
+    const ri = Rr - 0.45;
+    g.add(new THREE.Mesh(lathe([[Rr, -0.3], [Rr, 0.18], [Rr - 0.08, 0.32], [Rr - 0.25, 0.4], [ri, 0.36], [ri - 0.04, 0.28]], 64), mats.ring));
+    const seam = new THREE.Mesh(new THREE.RingGeometry(Rr - 0.02, Rr + 0.22, 64), mats.seam);
+    seam.position.z = 0.012;
+    g.add(seam);
+    const c = new THREE.Mesh(new THREE.CircleGeometry(ri, 64), coverMat);
+    c.position.z = 0.29;
+    g.add(c);
+    return g;
+  }
+  const LENS_R = 8.25;
+  for (const [x, y] of [[-24.2, 67.5], [-24.2, 47.9], [-6.3, 57.7]]) {
+    const l = makeLens(LENS_R);
+    l.position.set(x, y, PL_RISE);
+    back.add(l);
+  }
+  const flash = makeSmallWindow(3.15, mats.flash);
+  flash.position.set(25.6, 68.2, PL_RISE);
+  const lidar = makeSmallWindow(3.4, mats.lidar);
+  lidar.position.set(25.6, 47.9, PL_RISE);
+  const mic = new THREE.Mesh(new THREE.CircleGeometry(0.42, 24), mats.hole);
+  mic.position.set(25.6, 58.0, PL_RISE + 0.01);
+  back.add(flash, lidar, mic);
+
+  // ── Side controls (world +x = right side seen from the front)
+  function sideButton(len, wid, protrude, side, y, mat) {
+    const g = slab(wid, len, wid / 2, protrude + 0.35, 0.22, 0.22, 10, 4);
+    g.rotateY(side * Math.PI / 2);
+    const m = new THREE.Mesh(g, mat);
+    m.position.set(side * (W / 2 - 0.35), y, 0);
+    phone.add(m);
+  }
+  sideButton(18.5, 2.3, 0.55, +1, 27.4, mats.button);   // Side button
+  sideButton(8.2, 2.3, 0.5, -1, 48.7, mats.button);     // Action button
+  sideButton(14.2, 2.3, 0.5, -1, 32.0, mats.button);    // Volume up
+  sideButton(14.2, 2.3, 0.5, -1, 15.4, mats.button);    // Volume down
+  // Camera Control: flush sapphire crystal inside an aluminium surround
+  {
+    const y = -30.8;
+    const sur = slab(2.9, 18.6, 1.45, 0.45, 0.15, 0.15, 10, 3);
+    sur.rotateY(Math.PI / 2);
+    const surround = new THREE.Mesh(sur, mats.button);
+    surround.position.set(W / 2 - 0.35, y, 0);
+    const sg = flatShape(rrect(2.25, 17.9, 1.12), 12);
+    sg.rotateY(Math.PI / 2);
+    const crystal = new THREE.Mesh(sg, mats.sapphire);
+    crystal.position.set(W / 2 + 0.1 + 0.012, y, 0);
+    phone.add(surround, crystal);
+  }
+
+  // ── Bottom edge: USB-C, speaker / mic holes, screws (local +z points down, local y → world z)
+  {
+    const bottom = new THREE.Group();
+    bottom.rotation.x = Math.PI / 2;
+    bottom.position.y = -H / 2;
+    phone.add(bottom);
+
+    const ringShape = rrect(9.0, 3.3, 1.65);
+    ringShape.holes.push(rrect(8.4, 2.7, 1.35));
+    const pr = new THREE.Mesh(flatShape(ringShape, 16), mats.ring);
+    pr.position.z = 0.015;
+    const pin = new THREE.Mesh(flatShape(rrect(8.45, 2.75, 1.37), 16), mats.hole);
+    pin.position.z = 0.01;
+    const tongue = new THREE.Mesh(flatShape(rrect(6.4, 0.75, 0.3), 8), mats.tongue);
+    tongue.position.z = 0.02;
+    bottom.add(pr, pin, tongue);
+
+    const holeGeos = [];
+    for (const s of [-1, 1]) for (let i = 0; i < 6; i++) {
+      holeGeos.push(new THREE.CircleGeometry(0.58, 20).translate(s * (9.3 + i * 1.85), 0, 0.012));
+    }
+    bottom.add(new THREE.Mesh(BGU.mergeGeometries(holeGeos), mats.hole));
+
+    for (const s of [-1, 1]) {
+      const sc = new THREE.Mesh(new THREE.CircleGeometry(0.55, 20), mats.screw);
+      sc.position.set(s * 6.2, 0, 0.012);
+      bottom.add(sc);
+    }
+  }
+
+  // ───────────────────────── Soft floor shadow ─────────────────────────
+  const FLOOR_Y = -H / 2 - 24;
+  const blobTex = makeBlobTexture();
+  const shadowGeo = new THREE.PlaneGeometry(1, 1);
+  shadowGeo.rotateX(-Math.PI / 2);
+  const shadowSoft = new THREE.Mesh(shadowGeo, new THREE.MeshBasicMaterial({ color: 0x000000, map: blobTex, transparent: true, depthWrite: false, opacity: 0.5, toneMapped: false }));
+  const shadowCore = new THREE.Mesh(shadowGeo, new THREE.MeshBasicMaterial({ color: 0x000000, map: blobTex, transparent: true, depthWrite: false, opacity: 0.5, toneMapped: false }));
+  shadowSoft.renderOrder = 1; shadowCore.renderOrder = 2;
+  scene.add(shadowSoft, shadowCore);
+
+  const bboxCorners = [];
+  for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) bboxCorners.push(new THREE.Vector3(sx * W / 2, sy * H / 2, sz * (D / 2 + 1.5)));
+  const vTmp = new THREE.Vector3();
+  function updateShadow() {
+    phone.updateWorldMatrix(true, false);
+    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity, minY = Infinity;
+    for (const c of bboxCorners) {
+      vTmp.copy(c).applyMatrix4(phone.matrixWorld);
+      minX = Math.min(minX, vTmp.x); maxX = Math.max(maxX, vTmp.x);
+      minZ = Math.min(minZ, vTmp.z); maxZ = Math.max(maxZ, vTmp.z);
+      minY = Math.min(minY, vTmp.y);
+    }
+    const cx = (minX + maxX) / 2, cz = (minZ + maxZ) / 2, sx = maxX - minX, sz = maxZ - minZ;
+    const gap = Math.max(minY - FLOOR_Y, 0);
+    shadowSoft.position.set(cx, FLOOR_Y, cz);
+    shadowSoft.scale.set(sx * 1.5 + 70 + gap * 0.6, 1, sz * 1.5 + 60 + gap * 0.6);
+    shadowSoft.material.opacity = THREE.MathUtils.clamp(0.42 - gap * 0.0012, 0.22, 0.42);
+    shadowCore.position.set(cx, FLOOR_Y + 0.05, cz);
+    shadowCore.scale.set(sx * 1.1 + 14 + gap * 0.25, 1, sz * 1.1 + 12 + gap * 0.25);
+    shadowCore.material.opacity = THREE.MathUtils.clamp(0.62 - gap * 0.006, 0.12, 0.62);
+  }
+
+  // ───────────────────────── Camera framing ─────────────────────────
+  function baseDistance() {
+    const aspect = camera.aspect;
+    const tv = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+    const dHgt = 250 / 2 / tv;
+    const dWid = 128 / 2 / (tv * aspect);
+    return Math.max(dHgt, dWid);
+  }
+  let baseDist = baseDistance();
+  function onResize() {
+    const w = window.innerWidth, h = window.innerHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false);
+    baseDist = baseDistance();
+  }
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', onResize);
+
+  // ───────────────────────── Interaction ─────────────────────────
+  const HOME = { yaw: Math.PI + 0.62, pitch: 0.07 };
+  const VIEWS = {
+    front: { yaw: 0, pitch: 0 },
+    back: { yaw: Math.PI, pitch: 0 },
+    side: { yaw: -Math.PI / 2, pitch: 0 },
+    home: HOME
+  };
+  const PITCH_MAX = 1.5, ZOOM_MIN = 0.36, ZOOM_MAX = 1.6;
+  const state = {
+    yaw: HOME.yaw, pitch: HOME.pitch, zoom: 1,
+    tYaw: HOME.yaw, tPitch: HOME.pitch, tZoom: 1,
+    vYaw: 0, vPitch: 0
+  };
+  let autoRotate = !reducedMotion;
+  let tween = null;
+  const clamp = THREE.MathUtils.clamp;
+
+  const autoBtn = document.getElementById('auto');
+  const viewBtns = [...document.querySelectorAll('[data-view]')];
+  const hintEl = document.getElementById('hint');
+  let hintHidden = false;
+  const hideHint = () => { if (!hintHidden) { hintHidden = true; hintEl.classList.add('gone'); } };
+  setTimeout(hideHint, 9000);
+
+  function setAuto(on) {
+    autoRotate = on;
+    autoBtn.setAttribute('aria-pressed', String(on));
+  }
+  setAuto(autoRotate);
+  function setActive(name) { viewBtns.forEach(b => b.classList.toggle('active', b.dataset.view === name)); }
+
+  function goTo(name) {
+    const v = VIEWS[name];
+    const cy = state.yaw;
+    const ty = cy + Math.atan2(Math.sin(v.yaw - cy), Math.cos(v.yaw - cy)); // shortest way round
+    tween = { y0: cy, p0: state.pitch, y1: ty, p1: v.pitch, t0: performance.now(), dur: reducedMotion ? 350 : 1150 };
+    state.tZoom = 1;
+    state.vYaw = state.vPitch = 0;
+    if (name !== 'home') setAuto(false);
+    setActive(name);
+  }
+  viewBtns.forEach(b => b.addEventListener('click', () => goTo(b.dataset.view)));
+  autoBtn.addEventListener('click', () => { setAuto(!autoRotate); if (autoRotate) setActive(null); });
+
+  document.querySelectorAll('.swatches button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.swatches button').forEach(o => o.setAttribute('aria-pressed', String(o === b)));
+    applyPalette(b.dataset.color);
+  }));
+
+  const pointers = new Map();
+  let dragging = false, moved = false, pinchDist = 0, lastMoveT = 0;
+  const pinchDistance = () => {
+    const [a, b] = [...pointers.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y) || 1;
+  };
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    canvas.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 1) {
+      dragging = true; moved = false;
+      state.vYaw = state.vPitch = 0;
+      canvas.classList.add('dragging');
+    } else if (pointers.size === 2) {
+      pinchDist = pinchDistance();
+    }
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    const p = pointers.get(e.pointerId);
+    if (!p) return;
+    const dx = e.clientX - p.x, dy = e.clientY - p.y;
+    p.x = e.clientX; p.y = e.clientY;
+
+    if (pointers.size === 1) {
+      if (!moved && Math.hypot(dx, dy) > 0.5) {
+        moved = true;
+        tween = null;
+        setAuto(false);   // user started rotating → stop auto-rotation
+        setActive(null);
+        hideHint();
+      }
+      if (!moved) return;
+      const k = 0.0075;
+      const now = performance.now();
+      const dt = Math.max((now - lastMoveT) / 1000, 1 / 240);
+      lastMoveT = now;
+      state.tYaw += dx * k;
+      state.tPitch = clamp(state.tPitch + dy * k * 0.85, -PITCH_MAX, PITCH_MAX);
+      state.vYaw = state.vYaw * 0.4 + (dx * k / dt) * 0.6;
+      state.vPitch = state.vPitch * 0.4 + (dy * k * 0.85 / dt) * 0.6;
+    } else if (pointers.size === 2) {
+      const d = pinchDistance();
+      state.tZoom = clamp(state.tZoom * (pinchDist / d), ZOOM_MIN, ZOOM_MAX);
+      pinchDist = d;
+      state.vYaw = state.vPitch = 0;
+      hideHint();
+    }
+  });
+
+  const endPointer = (e) => {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.delete(e.pointerId);
+    if (pointers.size === 1) {
+      state.vYaw = state.vPitch = 0;   // pinch → single finger: no fling
+    }
+    if (pointers.size === 0) {
+      dragging = false;
+      canvas.classList.remove('dragging');
+      if (performance.now() - lastMoveT > 90) state.vYaw = state.vPitch = 0;
+      const vmax = 6;
+      state.vYaw = clamp(state.vYaw, -vmax, vmax);
+      state.vPitch = clamp(state.vPitch, -vmax, vmax);
+    }
+  };
+  canvas.addEventListener('pointerup', endPointer);
+  canvas.addEventListener('pointercancel', endPointer);
+  canvas.addEventListener('lostpointercapture', endPointer);
+
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
+    state.tZoom = clamp(state.tZoom * Math.exp(clamp(delta, -200, 200) * 0.0012), ZOOM_MIN, ZOOM_MAX);
+    hideHint();
+  }, { passive: false });
+
+  canvas.addEventListener('dblclick', () => goTo('home'));
+
+  window.addEventListener('keydown', (e) => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const map = { '1': 'front', '2': 'back', '3': 'side', '0': 'home', 'h': 'home' };
+    if (map[e.key]) goTo(map[e.key]);
+    else if (e.key === 'r' || e.key === 'R') setAuto(!autoRotate);
+    else if (e.key === '+' || e.key === '=') state.tZoom = clamp(state.tZoom * 0.88, ZOOM_MIN, ZOOM_MAX);
+    else if (e.key === '-' || e.key === '_') state.tZoom = clamp(state.tZoom / 0.88, ZOOM_MIN, ZOOM_MAX);
+  });
+
+  // ───────────────────────── Render loop ─────────────────────────
+  const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const clock = new THREE.Clock();
+  let perfFrames = 0, perfTime = 0;
+
+  function frame() {
+    const dt = Math.min(clock.getDelta(), 0.05);
+    const t = clock.elapsedTime;
+
+    if (tween) {
+      const p = clamp((performance.now() - tween.t0) / tween.dur, 0, 1);
+      const e = ease(p);
+      state.yaw = state.tYaw = tween.y0 + (tween.y1 - tween.y0) * e;
+      state.pitch = state.tPitch = tween.p0 + (tween.p1 - tween.p0) * e;
+      if (p >= 1) tween = null;
+    } else {
+      if (!dragging) {
+        state.tYaw += state.vYaw * dt;
+        state.tPitch = clamp(state.tPitch + state.vPitch * dt, -PITCH_MAX, PITCH_MAX);
+        const decay = Math.exp(-dt * 3.2);
+        state.vYaw *= decay; state.vPitch *= decay;
+        if (autoRotate) state.tYaw += dt * 0.32;
+      }
+      const f = 1 - Math.exp(-dt * 14);
+      state.yaw += (state.tYaw - state.yaw) * f;
+      state.pitch += (state.tPitch - state.pitch) * f;
+    }
+    state.zoom += (state.tZoom - state.zoom) * (1 - Math.exp(-dt * 9));
+
+    // Keep angles bounded without visible jumps.
+    if (Math.abs(state.yaw) > 1000 && !tween) {
+      const off = Math.round(state.yaw / (Math.PI * 2)) * Math.PI * 2;
+      state.yaw -= off; state.tYaw -= off;
+    }
+
+    phone.rotation.set(state.pitch, state.yaw, 0, 'XYZ');
+    pivot.position.y = reducedMotion ? 0 : Math.sin(t * 0.8) * 1.4;
+
+    const dist = baseDist * state.zoom;
+    const elev = 0.07;
+    camera.position.set(LOOK_AT.x, LOOK_AT.y + Math.sin(elev) * dist, Math.cos(elev) * dist);
+    camera.lookAt(LOOK_AT);
+
+    updateShadow();
+    renderer.render(scene, camera);
+
+    // Adaptive resolution: step the pixel ratio down if the GPU can't keep up.
+    perfFrames++; perfTime += dt;
+    if (perfFrames >= 90) {
+      const avg = perfTime / perfFrames;
+      if (avg > 1 / 40 && pixelRatio > 1) {
+        pixelRatio = Math.max(1, pixelRatio - 0.25);
+        renderer.setPixelRatio(pixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight, false);
+      }
+      perfFrames = 0; perfTime = 0;
+    }
+  }
+
+  await step('შეიდერების კომპილაცია…');
+  camera.position.set(0, 0, baseDist);
+  camera.lookAt(LOOK_AT);
+  try { await renderer.compileAsync(scene, camera); } catch (e) { /* falls back to compile on first render */ }
+
+  renderer.setAnimationLoop(frame);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    window.__READY__ = true;
+    clearTimeout(window.__loadTimer);
+    loaderEl.classList.add('done');
+    setTimeout(() => { loaderEl.style.display = 'none'; }, 800);
+  }));
+}
+</script>
+</body>
+</html>
